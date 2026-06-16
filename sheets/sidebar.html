@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; padding: 12px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select { width: 100%; padding: 5px; margin-top: 3px; box-sizing: border-box; }
+    button { margin-top: 16px; width: 100%; padding: 8px; background: #1a73e8; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 13px; }
+    button:disabled { background: #aaa; cursor: default; }
+    #status { margin-top: 12px; font-size: 12px; color: #555; min-height: 18px; }
+    #error { margin-top: 8px; font-size: 12px; color: #c00; }
+    .row { display: flex; gap: 8px; }
+    .row > div { flex: 1; }
+  </style>
+</head>
+<body>
+  <h3 style="margin-top:0">CEFR Analyser</h3>
+
+  <label>Text column (e.g. B)</label>
+  <input id="sourceCol" type="text" maxlength="3" placeholder="B">
+
+  <label>CEFR target level</label>
+  <select id="target">
+    <option value="A1">A1</option>
+    <option value="A2">A2</option>
+    <option value="B1" selected>B1</option>
+    <option value="B2">B2</option>
+    <option value="C1">C1</option>
+    <option value="C2">C2</option>
+  </select>
+
+  <div class="row">
+    <div>
+      <label>% compliance column</label>
+      <input id="pctCol" type="text" maxlength="3" placeholder="C">
+    </div>
+    <div>
+      <label>Flagged words column</label>
+      <input id="flagsCol" type="text" maxlength="3" placeholder="D">
+    </div>
+  </div>
+
+  <label>Show levels in flags?</label>
+  <select id="showLevels">
+    <option value="true" selected>Yes - word (B2)</option>
+    <option value="false">No - word only</option>
+  </select>
+
+  <label>Start row</label>
+  <input id="startRow" type="number" value="2" min="1">
+
+  <button id="runBtn" onclick="run()">Run analysis</button>
+
+  <div id="status"></div>
+  <div id="error"></div>
+
+  <script>
+    function run() {
+      const sourceCol = document.getElementById("sourceCol").value.trim().toUpperCase();
+      const target    = document.getElementById("target").value;
+      const pctCol    = document.getElementById("pctCol").value.trim().toUpperCase();
+      const flagsCol  = document.getElementById("flagsCol").value.trim().toUpperCase();
+      const showLevels = document.getElementById("showLevels").value === "true";
+      const startRow  = parseInt(document.getElementById("startRow").value, 10);
+
+      document.getElementById("error").textContent = "";
+
+      if (!sourceCol || !pctCol || !flagsCol) {
+        document.getElementById("error").textContent = "Please fill in all column fields.";
+        return;
+      }
+
+      const btn = document.getElementById("runBtn");
+      btn.disabled = true;
+      setStatus("Starting…");
+
+      google.script.run
+        .withSuccessHandler(onDone)
+        .withFailureHandler(onError)
+        .runAnalysis({ sourceCol, target, pctCol, flagsCol, showLevels, startRow });
+    }
+
+    function onDone(result) {
+      document.getElementById("runBtn").disabled = false;
+      setStatus(`Done — ${result.processed} rows processed, ${result.skipped} skipped.`);
+    }
+
+    function onError(err) {
+      document.getElementById("runBtn").disabled = false;
+      setStatus("");
+      document.getElementById("error").textContent = "Error: " + err.message;
+    }
+
+    function setStatus(msg) {
+      document.getElementById("status").textContent = msg;
+    }
+  </script>
+</body>
+</html>

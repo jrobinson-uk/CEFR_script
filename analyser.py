@@ -29,7 +29,7 @@ def analyse(text: str, target: str = "B1", glossary_terms=None) -> dict:
         glossary_terms = []
 
     glossary_set = {t.lower().strip() for t in glossary_terms}
-    target_value = _LEVEL_MAP[target].value
+    target_value = _LEVEL_MAP[target.upper()].value
 
     # Tokenise: split on whitespace and punctuation, lowercase
     tokens = re.findall(r"[a-zA-Z]+(?:'[a-zA-Z]+)?", text.lower())
@@ -72,7 +72,7 @@ def analyse(text: str, target: str = "B1", glossary_terms=None) -> dict:
 
     total = len(scored_words)
     within = total - len(flagged_words)
-    compliance_pct = round((within / total) * 100) if total > 0 else 100
+    compliance_pct = round((within / total), 4) if total > 0 else 1.0
 
     return {
         "ceiling_level": ceiling_level,
